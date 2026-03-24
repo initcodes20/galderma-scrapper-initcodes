@@ -1,0 +1,190 @@
+@import "tailwindcss";
+
+/* ==========================================
+   DESIGN TOKENS — White & Green Theme
+========================================== */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f0faf4;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f6fdf8;
+  --border: #d1e8da;
+  --border-hover: #86c9a0;
+
+  --text-primary: #0f2b1a;
+  --text-secondary: #3d6b52;
+  --text-muted: #7aab90;
+
+  --accent: #16a34a;
+  --accent-light: #22c55e;
+  --accent-dark: #15803d;
+  --accent-bg: #f0faf4;
+  --accent-bg-strong: #dcfce7;
+
+  /* Platform colors */
+  --amazon: #ea580c;
+  --flipkart: #2563eb;
+  --nykaa: #db2777;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  --shadow-card: 0 2px 16px rgba(22, 163, 74, 0.08);
+  --shadow-card-hover: 0 6px 32px rgba(22, 163, 74, 0.15);
+}
+
+/* ==========================================
+   RESET & BASE
+========================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: "Inter", system-ui, sans-serif;
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f0faf4;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #86c9a0;
+  border-radius: 10px;
+}
+
+/* ==========================================
+   UTILITIES
+========================================== */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: all 0.22s ease;
+}
+
+.card:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.18s ease;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--accent-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.3);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.btn-ghost:hover {
+  border-color: var(--accent-light);
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #16a34a, #059669);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ==========================================
+   ANIMATIONS
+========================================== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeInUp 0.4s ease forwards;
+  opacity: 0;
+}
+
+/* ==========================================
+   SKELETON
+========================================== */
+.skeleton {
+  background: linear-gradient(90deg, #e8f5ee 0%, #d1eedd 50%, #e8f5ee 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
