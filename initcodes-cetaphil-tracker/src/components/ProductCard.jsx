@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 const PLATFORM_META = {
     amazon: { label: "Amazon", color: "#ea580c", bg: "rgba(234,88,12,0.07)" },
@@ -24,6 +26,28 @@ export default function ProductCard({ product }) {
     );
     const bestPlatform = bestEntry?.[0];
     const bestPrice = bestEntry?.[1]?.price;
+
+    const router = useRouter();
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const handleDelete = async (e) => {
+        e.preventDefault(); // Prevent navigating to the product page
+        
+        if (!confirm(`Are you sure you want to stop tracking "${name}"?`)) {
+            return;
+        }
+
+        setIsDeleting(true);
+        try {
+            const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
+            if (!res.ok) throw new Error("Failed to delete product");
+            
+            router.refresh(); // Refresh the page to remove the product
+        } catch (err) {
+            alert(err.message);
+            setIsDeleting(false);
+        }
+    };
 
     return (
         <Link href={`/product/${id}`} style={{ textDecoration: "none", display: "block", height: "100%" }}>
@@ -49,6 +73,22 @@ export default function ProductCard({ product }) {
                     ) : (
                         <div style={{ fontSize: 64, opacity: 0.4 }}>🧴</div>
                     )}
+
+                    <div 
+                        onClick={handleDelete}
+                        style={{
+                            position: "absolute", top: 12, left: 12,
+                            background: "rgba(220, 38, 38, 0.9)", color: "#fff",
+                            fontSize: 16, width: 28, height: 28,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            borderRadius: "50%", cursor: "pointer",
+                            boxShadow: "0 2px 8px rgba(220, 38, 38, 0.35)",
+                            opacity: isDeleting ? 0.5 : 1
+                        }}
+                        title="Delete Product"
+                    >
+                        ×
+                    </div>
 
                     {bestPlatform && (
                         <div style={{

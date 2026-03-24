@@ -1,8 +1,67 @@
 import { BaseScraper } from "../services/baseScraper.js";
 import { logger } from "../utils/logger.js";
 import { PriceUtils } from "../utils/priceUtils.js";
+import stringSimilarity from "string-similarity";
 
 export class NykaaHandler extends BaseScraper {
+  async searchProduct(query) {
+    try {
+      const searchUrl = `https://www.nykaa.com/search/result/?q=${encodeURIComponent(query)}`;
+      await this.navigateWithRetry(searchUrl, { waitUntil: 'domcontentloaded' });
+
+      // Wait for search results container
+      const resultsLoaded = await this.waitForSelectorSafe('#product-list-wrap, .css-1d5sdbf, .product-list', 10000);
+      if (!resultsLoaded) {
+        logger.warn(`Nykaa: No search results loaded for "${query}".`);
+        return { status: 'error', price: null, url: null, error: 'No results' };
+      }
+
+      // Extract top 5 results
+      const items = await this.page.$$eval('.css-d5z3ro, .product-list-card, .productWrapper, .css-xrzmfa', (elements) => {
+        return elements.slice(0, 5).map(el => {
+            const linkEl = el.querySelector('a') || (el.tagName === 'A' ? el : null);
+            const titleEl = el.querySelector('.css-xrzmfa, .product-title') || linkEl;
+            const priceEl = el.querySelector('.css-111z9ua, .price, [data-testid="price"]') || el.querySelector('.css-1d0jf8e');
+            const imgEl = el.querySelector('img');
+            
+            let titleText = titleEl ? titleEl.innerText.trim() : '';
+            if (titleText.includes('\n')) titleText = titleText.split('\n')[0]; // Sometimes it includes extra rows
+
+            return {
+                title: titleText,
+                url: linkEl ? linkEl.href : '',
+                priceText: priceEl ? priceEl.innerText.trim() : null,
+                image_url: imgEl ? imgEl.src : null
+            };
+        }).filter(item => item.title && item.url && item.priceText);
+      });
+
+      if (items.length === 0) {
+        return { status: 'error', price: null, url: null, error: 'No items parsed' };
+      }
+
+      // Trust the platform's search engine. Pick the first result that contains the primary brand/keyword, or just the first result.
+      const mainKeyword = query.toLowerCase().split(' ')[0];
+      let bestMatch = items.find(item => item.title.toLowerCase().includes(mainKeyword)) || items[0];
+
+      logger.info(`Nykaa: Fast Extract best match for "${query}" is "${bestMatch.title}"`);
+      
+      const cleanPrice = PriceUtils.clean(bestMatch.priceText);
+      return { 
+        status: 'ok', 
+        price: cleanPrice, 
+        url: bestMatch.url, 
+        name: bestMatch.title, 
+        image_url: bestMatch.image_url,
+        platform: 'nykaa'
+      };
+
+    } catch (err) {
+      logger.error(`Nykaa search error for "${query}"`, err);
+      return { status: 'error', price: null, url: null, error: err.message };
+    }
+  }
+
   async scrape(url) {
     try {
       await this.navigateWithRetry(url, { waitUntil: 'domcontentloaded' });
