@@ -33,11 +33,34 @@ export async function POST(request) {
       }));
 
     if (sourcesToInsert.length > 0) {
-      const { error: sError } = await supabase
+      const { data: insertedSources, error: sError } = await supabase
         .from("product_sources")
-        .insert(sourcesToInsert);
+        .insert(sourcesToInsert)
+        .select();
       
       if (sError) throw sError;
+
+      // 3. Insert initial prices into price_history
+      const pricesToInsert = [];
+      for (const src of insertedSources) {
+        // Find the original source payload to get the price
+        const originalSource = sources.find(s => s.platform.toLowerCase() === src.platform);
+        if (originalSource && originalSource.price) {
+          pricesToInsert.push({
+            product_id: product.id,
+            source_id: src.id,
+            platform: src.platform,
+            price: Number(originalSource.price)
+          });
+        }
+      }
+
+      if (pricesToInsert.length > 0) {
+        const { error: histError } = await supabase
+          .from("price_history")
+          .insert(pricesToInsert);
+        if (histError) console.error("Error saving initial price history:", histError);
+      }
     }
 
     return NextResponse.json({ success: true, productId: product.id });

@@ -45,7 +45,7 @@ export default function AddProductModal({ isOpen, onClose, onRefresh }) {
       .map(platform => {
         const platformData = searchResults.results[platform];
         if (platformData && platformData.url) {
-          return { platform, url: platformData.url };
+          return { platform, url: platformData.url, price: platformData.price };
         }
         return null;
       })
