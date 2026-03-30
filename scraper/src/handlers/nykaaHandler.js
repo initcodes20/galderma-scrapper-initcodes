@@ -10,31 +10,55 @@ export class NykaaHandler extends BaseScraper {
       await this.navigateWithRetry(searchUrl, { waitUntil: 'domcontentloaded' });
 
       // Wait for search results container
-      const resultsLoaded = await this.waitForSelectorSafe('#product-list-wrap, .css-1d5sdbf, .product-list', 10000);
+      const resultsLoaded = await this.waitForSelectorSafe(
+        'a.css-qlopj4, #product-list-wrap, .css-1d5sdbf, .product-list',
+        10000
+      );
       if (!resultsLoaded) {
         logger.warn(`Nykaa: No search results loaded for "${query}".`);
         return { status: 'error', price: null, url: null, error: 'No results' };
       }
 
-      // Extract top 5 results
-      const items = await this.page.$$eval('.css-d5z3ro, .product-list-card, .productWrapper, .css-xrzmfa', (elements) => {
-        return elements.slice(0, 5).map(el => {
+      // --- NEW layout: a.css-qlopj4 cards ---
+      let items = await this.page.evaluate(() => {
+        const cards = Array.from(document.querySelectorAll('a.css-qlopj4'));
+        return cards.slice(0, 5).map(card => {
+          const allText = Array.from(card.querySelectorAll('div'));
+          // Title is usually the first meaningful text div (skip short/empty ones)
+          const titleDiv = allText.find(d => d.children.length === 0 && d.innerText.trim().length > 5);
+          // Price is a span or div containing ₹
+          const priceEl = Array.from(card.querySelectorAll('span, div')).find(el =>
+            el.children.length === 0 && /₹/.test(el.innerText)
+          );
+          const imgEl = card.querySelector('img');
+          return {
+            title: titleDiv ? titleDiv.innerText.trim() : '',
+            url: card.href || '',
+            priceText: priceEl ? priceEl.innerText.trim() : null,
+            image_url: imgEl ? imgEl.src : null
+          };
+        }).filter(item => item.title && item.url && item.priceText);
+      });
+
+      // --- FALLBACK: old selectors ---
+      if (items.length === 0) {
+        items = await this.page.$$eval('.css-d5z3ro, .product-list-card, .productWrapper, .css-xrzmfa', (elements) => {
+          return elements.slice(0, 5).map(el => {
             const linkEl = el.querySelector('a') || (el.tagName === 'A' ? el : null);
             const titleEl = el.querySelector('.css-xrzmfa, .product-title') || linkEl;
             const priceEl = el.querySelector('.css-111z9ua, .price, [data-testid="price"]') || el.querySelector('.css-1d0jf8e');
             const imgEl = el.querySelector('img');
-            
             let titleText = titleEl ? titleEl.innerText.trim() : '';
-            if (titleText.includes('\n')) titleText = titleText.split('\n')[0]; // Sometimes it includes extra rows
-
+            if (titleText.includes('\n')) titleText = titleText.split('\n')[0];
             return {
-                title: titleText,
-                url: linkEl ? linkEl.href : '',
-                priceText: priceEl ? priceEl.innerText.trim() : null,
-                image_url: imgEl ? imgEl.src : null
+              title: titleText,
+              url: linkEl ? linkEl.href : '',
+              priceText: priceEl ? priceEl.innerText.trim() : null,
+              image_url: imgEl ? imgEl.src : null
             };
-        }).filter(item => item.title && item.url && item.priceText);
-      });
+          }).filter(item => item.title && item.url && item.priceText);
+        });
+      }
 
       if (items.length === 0) {
         return { status: 'error', price: null, url: null, error: 'No items parsed' };

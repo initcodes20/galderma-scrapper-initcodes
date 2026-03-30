@@ -15,48 +15,84 @@ export class FlipkartHandler extends BaseScraper {
         if (closeBtn) await closeBtn.click();
       } catch (e) {}
 
-      // Wait for search results
-      const resultsLoaded = await this.waitForSelectorSafe('[data-id]', 10000);
+      // Wait for any of the known result selectors (new or old layout)
+      const resultsLoaded = await this.waitForSelectorSafe(
+        'a.pIpigb, [data-id], .cPHDOP',
+        10000
+      );
       if (!resultsLoaded) {
         logger.warn(`Flipkart: No search results loaded for "${query}".`);
         return { status: 'error', price: null, url: null, error: 'No results' };
       }
 
-      // Extract top 5 results
-      const items = await this.page.$$eval('[data-id]', (elements) => {
-        return elements.slice(0, 5).map(el => {
-          const allLinks = Array.from(el.querySelectorAll('a'));
-          const linkEl = allLinks.find(a => a.href && a.href.includes('/p/')) || allLinks[0];
-          
-          // Try known title classes first, then fallback to longest text link
-          let titleEl = el.querySelector('div._4rR01T, a.s1Q9rs, a.IRpwTa, .name, .slAVV4, .wjcEIp');
-          if (!titleEl && allLinks.length > 0) {
-              titleEl = allLinks.reduce((longest, current) => current.innerText.length > longest.innerText.length ? current : longest, allLinks[0]);
-          }
-          
-          const imgEl = el.querySelector('img._396cs4, img.CXW8mj, img');
-          
-          let priceText = null;
-          let priceEl = el.querySelector('div._30jeq3') || el.querySelector('div.Nx9zRn') || el.querySelector('.price');
-          if (priceEl) {
-              priceText = priceEl.innerText.trim();
-          } else {
-              const text = el.innerText;
-              const match = text.match(/₹\s*([0-9,]+)/) || text.match(/Rs\.?\s*([0-9,]+)/i);
-              if (match) priceText = match[1];
-          }
+      // --- NEW layout: sibling anchor tags per product (a.pIpigb=title, a.fb4uj3=price, a.GnxRXv=image) ---
+      let items = await this.page.evaluate(() => {
+        const titleLinks = Array.from(document.querySelectorAll('a.pIpigb'));
+        const map = new Map();
 
-          let finalTitle = titleEl && titleEl.title ? titleEl.title : (titleEl ? titleEl.innerText.trim() : '');
-          if (finalTitle.includes('\n')) finalTitle = finalTitle.split('\n')[0];
+        // Index price links by base URL (strip query params for matching)
+        const priceLinks = Array.from(document.querySelectorAll('a.fb4uj3'));
+        const imgLinks = Array.from(document.querySelectorAll('a.GnxRXv'));
 
+        const baseUrl = (href) => {
+          try { const u = new URL(href); return u.pathname; } catch(e) { return href; }
+        };
+
+        const priceMap = new Map();
+        priceLinks.forEach(a => {
+          const key = baseUrl(a.href);
+          if (!priceMap.has(key)) {
+            // First child div that likely contains discounted price
+            const divs = Array.from(a.querySelectorAll('div'));
+            const priceDiv = divs.find(d => /₹|Rs/.test(d.innerText) && d.children.length === 0);
+            priceMap.set(key, priceDiv ? priceDiv.innerText.trim() : (a.innerText.match(/₹\s*[\d,]+/)?.[0] || null));
+          }
+        });
+
+        const imgMap = new Map();
+        imgLinks.forEach(a => {
+          const key = baseUrl(a.href);
+          if (!imgMap.has(key)) {
+            const img = a.querySelector('img');
+            imgMap.set(key, img ? img.src : null);
+          }
+        });
+
+        return titleLinks.slice(0, 5).map(a => {
+          const key = baseUrl(a.href);
           return {
-            title: finalTitle,
-            url: linkEl ? linkEl.href : '',
-            priceText: priceText,
-            image_url: imgEl ? imgEl.src : null
+            title: a.title || a.innerText.trim(),
+            url: a.href,
+            priceText: priceMap.get(key) || null,
+            image_url: imgMap.get(key) || null
           };
         }).filter(item => item.title && item.url && item.priceText);
       });
+
+      // --- FALLBACK: old layout using [data-id] cards ---
+      if (items.length === 0) {
+        items = await this.page.$$eval('[data-id]', (elements) => {
+          return elements.slice(0, 5).map(el => {
+            const allLinks = Array.from(el.querySelectorAll('a'));
+            const linkEl = allLinks.find(a => a.href && a.href.includes('/p/')) || allLinks[0];
+            let titleEl = el.querySelector('div._4rR01T, a.s1Q9rs, a.IRpwTa, a.pIpigb, .slAVV4, .wjcEIp');
+            if (!titleEl && allLinks.length > 0) {
+              titleEl = allLinks.reduce((l, c) => c.innerText.length > l.innerText.length ? c : l, allLinks[0]);
+            }
+            const imgEl = el.querySelector('img._396cs4, img.CXW8mj, img');
+            let priceText = null;
+            const priceEl = el.querySelector('div._30jeq3, div.Nx9zRn, .price');
+            if (priceEl) priceText = priceEl.innerText.trim();
+            else {
+              const match = el.innerText.match(/₹\s*([0-9,]+)/);
+              if (match) priceText = '₹' + match[1];
+            }
+            let finalTitle = titleEl?.title || titleEl?.innerText?.trim() || '';
+            if (finalTitle.includes('\n')) finalTitle = finalTitle.split('\n')[0];
+            return { title: finalTitle, url: linkEl?.href || '', priceText, image_url: imgEl?.src || null };
+          }).filter(item => item.title && item.url && item.priceText);
+        });
+      }
 
       if (items.length === 0) {
         return { status: 'error', price: null, url: null, error: 'No items parsed' };
