@@ -18,7 +18,7 @@ export class SearchService {
 
   async initBrowser() {
     if (!this.initialized) {
-      await this.browserService.init({ headless: false }); // Running non-headless to bypass basic bot detections
+      await this.browserService.init({ headless: true }); // Must be headless on cloud servers (no display)
       this.initialized = true;
     }
   }

@@ -20,8 +20,8 @@ export default function AddProductModal({ isOpen, onClose, onRefresh }) {
     setSearchResults(null);
 
     try {
-      // Assuming Express API runs on port 5001
-      const res = await fetch("http://localhost:5001/search-product", {
+      const scraperUrl = process.env.NEXT_PUBLIC_SCRAPER_API_URL || "http://localhost:5001";
+      const res = await fetch(`${scraperUrl}/search-product`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: name })
