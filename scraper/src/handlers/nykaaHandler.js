@@ -9,72 +9,135 @@ export class NykaaHandler extends BaseScraper {
       const searchUrl = `https://www.nykaa.com/search/result/?q=${encodeURIComponent(query)}`;
       await this.navigateWithRetry(searchUrl, { waitUntil: 'domcontentloaded' });
 
-      // Wait for search results container
+      // Wait for product cards to appear
       const resultsLoaded = await this.waitForSelectorSafe(
-        'a.css-qlopj4, #product-list-wrap, .css-1d5sdbf, .product-list',
-        10000
+        'a.css-qlopj4, #product-list-wrap, .css-1d5sdbf',
+        12000
       );
       if (!resultsLoaded) {
         logger.warn(`Nykaa: No search results loaded for "${query}".`);
         return { status: 'error', price: null, url: null, error: 'No results' };
       }
 
-      // --- NEW layout: a.css-qlopj4 cards ---
+      // Short settle wait for lazy-rendered prices
+      await this.page.waitForTimeout(1500).catch(() => {});
+
+      // --- PRIMARY: a.css-qlopj4 card layout ---
       let items = await this.page.evaluate(() => {
         const cards = Array.from(document.querySelectorAll('a.css-qlopj4'));
-        return cards.slice(0, 5).map(card => {
-          const allText = Array.from(card.querySelectorAll('div'));
-          // Title is usually the first meaningful text div (skip short/empty ones)
-          const titleDiv = allText.find(d => d.children.length === 0 && d.innerText.trim().length > 5);
-          // Price is a span or div containing ₹
-          const priceEl = Array.from(card.querySelectorAll('span, div')).find(el =>
-            el.children.length === 0 && /₹/.test(el.innerText)
-          );
+
+        return cards.slice(0, 8).map(card => {
+
+          // ── TITLE ──────────────────────────────────────────────────
+          // Collect leaf text nodes, skip price-only and pure-number (rating) strings
+          const leafEls = Array.from(card.querySelectorAll('div, span, p'))
+            .filter(el =>
+              el.children.length === 0 &&
+              el.innerText.trim().length > 3 &&
+              !/^₹/.test(el.innerText.trim()) &&        // skip price-only elements
+              !/^\d+(\.\d+)?$/.test(el.innerText.trim()) // skip pure-number (ratings/counts)
+            );
+
+          // First two meaningful text nodes = brand + product name
+          const titleParts = leafEls.slice(0, 2).map(el => el.innerText.trim());
+          const title = titleParts.join(' ').trim();
+
+          // ── PRICE: selling price (NOT the struck-through MRP) ───────
+          const allPriceEls = Array.from(card.querySelectorAll('span, div, p'))
+            .filter(el =>
+              el.children.length === 0 &&
+              /₹\s*[\d,]+/.test(el.innerText)
+            );
+
+          // Walk up DOM tree to detect strikethrough formatting
+          const isStrikethrough = (el) => {
+            let cur = el;
+            while (cur && cur !== card) {
+              if (cur.tagName === 'DEL' || cur.tagName === 'S') return true;
+              const cls = (cur.className || '').toLowerCase();
+              if (
+                cls.includes('line-through') ||
+                cls.includes('mrp') ||
+                cls.includes('strike') ||
+                cls.includes('original-price')
+              ) return true;
+              if ((cur.style && cur.style.textDecoration || '').includes('line-through')) return true;
+              cur = cur.parentElement;
+            }
+            return false;
+          };
+
+          // First: prefer non-strikethrough price (= selling price)
+          let sellingPriceEl = allPriceEls.find(el => !isStrikethrough(el));
+
+          // Fallback: if all elements look the same, take the LOWEST numeric value
+          // (selling price is always ≤ MRP)
+          if (!sellingPriceEl && allPriceEls.length > 0) {
+            const parsed = allPriceEls.map(el => {
+              const m = el.innerText.match(/₹\s*([\d,]+)/);
+              return m ? { el, val: parseInt(m[1].replace(/,/g, ''), 10) } : null;
+            }).filter(Boolean);
+            if (parsed.length > 0) {
+              sellingPriceEl = parsed.reduce((a, b) => b.val < a.val ? b : a).el;
+            }
+          }
+
+          const priceText = sellingPriceEl ? sellingPriceEl.innerText.trim() : null;
           const imgEl = card.querySelector('img');
+
           return {
-            title: titleDiv ? titleDiv.innerText.trim() : '',
+            title,
             url: card.href || '',
-            priceText: priceEl ? priceEl.innerText.trim() : null,
+            priceText,
             image_url: imgEl ? imgEl.src : null
           };
         }).filter(item => item.title && item.url && item.priceText);
       });
 
-      // --- FALLBACK: old selectors ---
+      // --- FALLBACK: older card selectors ---
       if (items.length === 0) {
-        items = await this.page.$$eval('.css-d5z3ro, .product-list-card, .productWrapper, .css-xrzmfa', (elements) => {
-          return elements.slice(0, 5).map(el => {
-            const linkEl = el.querySelector('a') || (el.tagName === 'A' ? el : null);
-            const titleEl = el.querySelector('.css-xrzmfa, .product-title') || linkEl;
-            const priceEl = el.querySelector('.css-111z9ua, .price, [data-testid="price"]') || el.querySelector('.css-1d0jf8e');
-            const imgEl = el.querySelector('img');
-            let titleText = titleEl ? titleEl.innerText.trim() : '';
-            if (titleText.includes('\n')) titleText = titleText.split('\n')[0];
-            return {
-              title: titleText,
-              url: linkEl ? linkEl.href : '',
-              priceText: priceEl ? priceEl.innerText.trim() : null,
-              image_url: imgEl ? imgEl.src : null
-            };
-          }).filter(item => item.title && item.url && item.priceText);
-        });
+        items = await this.page.$$eval(
+          '.css-d5z3ro, .product-list-card, .productWrapper',
+          (elements) => {
+            return elements.slice(0, 8).map(el => {
+              const linkEl = el.querySelector('a') || (el.tagName === 'A' ? el : null);
+              const titleEl = el.querySelector('.css-xrzmfa, .product-title') || linkEl;
+              const priceEl =
+                el.querySelector('.css-111z9ua, [data-testid="price"]') ||
+                el.querySelector('.css-1d0jf8e');
+              const imgEl = el.querySelector('img');
+              let titleText = titleEl ? titleEl.innerText.trim() : '';
+              if (titleText.includes('\n')) titleText = titleText.split('\n')[0];
+              return {
+                title: titleText,
+                url: linkEl ? linkEl.href : '',
+                priceText: priceEl ? priceEl.innerText.trim() : null,
+                image_url: imgEl ? imgEl.src : null
+              };
+            }).filter(item => item.title && item.url && item.priceText);
+          }
+        );
       }
 
       if (items.length === 0) {
         return { status: 'error', price: null, url: null, error: 'No items parsed' };
       }
 
-      // Use quantity-aware best match: prefer exact quantity match, fallback gracefully
+      // Log all candidates for debugging
+      logger.info(`Nykaa: Found ${items.length} candidates for "${query}":`);
+      items.forEach((it, i) => logger.info(`  [${i}] "${it.title}" — ${it.priceText}`));
+
+      // Quantity-aware best match: prefer exact quantity, fallback gracefully
       const { item: bestMatch, quantityMismatch, requestedQty, foundQty } = pickBestMatch(items, query);
 
-      logger.info(`Nykaa: Best match for "${query}" → "${bestMatch.title}"${ quantityMismatch ? ` [qty mismatch: wanted ${requestedQty}, got ${foundQty || 'unknown'}]` : '' }`);
-      
+      logger.info(`Nykaa: Picked → "${bestMatch.title}"${ quantityMismatch ? ` [qty mismatch: wanted ${requestedQty}, got ${foundQty || 'unknown'}]` : '' }`);
+
       const cleanPrice = PriceUtils.clean(bestMatch.priceText);
-      return { 
-        status: 'ok', 
-        price: cleanPrice, 
-        url: bestMatch.url, 
-        name: bestMatch.title, 
+      return {
+        status: 'ok',
+        price: cleanPrice,
+        url: bestMatch.url,
+        name: bestMatch.title,
         image_url: bestMatch.image_url,
         platform: 'nykaa',
         quantity_mismatch: quantityMismatch,
@@ -91,7 +154,7 @@ export class NykaaHandler extends BaseScraper {
   async scrape(url) {
     try {
       await this.navigateWithRetry(url, { waitUntil: 'domcontentloaded' });
-      
+
       const priceSelectors = [".css-111z9ua", "[data-testid='price']", ".css-12s389n"];
       let priceText = null;
 
@@ -104,8 +167,8 @@ export class NykaaHandler extends BaseScraper {
       }
 
       if (!priceText) {
-          logger.warn(`Nykaa: No price found. Title: "${await this.page.title()}"`);
-          return null;
+        logger.warn(`Nykaa: No price found. Title: "${await this.page.title()}"`);
+        return null;
       }
 
       const details = await this.page.evaluate(() => {
@@ -116,8 +179,8 @@ export class NykaaHandler extends BaseScraper {
         const rateEl = document.querySelector(".css-12ola6c, [class*='rating']");
         let rating = null;
         if (rateEl) {
-            const match = rateEl.innerText.match(/[\d.]+/);
-            if (match) rating = parseFloat(match[0]);
+          const match = rateEl.innerText.match(/[\d.]+/);
+          if (match) rating = parseFloat(match[0]);
         }
         return { name, image_url, rating };
       });

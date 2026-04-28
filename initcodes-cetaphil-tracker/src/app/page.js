@@ -1,4 +1,5 @@
 import ProductCard from "@/components/ProductCard";
+import AddProductButton from "@/components/AddProductButton";
 import { createClient } from "@supabase/supabase-js";
 
 async function getProducts() {
@@ -92,13 +93,14 @@ export default async function HomePage() {
       {/* Products Grid */}
       <section style={{ padding: "44px 24px 80px" }}>
         <div className="container">
-          <div style={{ marginBottom: 28 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
             <h2 style={{ fontSize: 20, fontWeight: 700, color: "#0f2b1a" }}>
               Tracked Products
               <span style={{ marginLeft: 10, fontSize: 14, fontWeight: 500, color: "#7aab90" }}>
                 {products.length} {products.length === 1 ? "product" : "products"}
               </span>
             </h2>
+            <AddProductButton />
           </div>
 
           {products.length === 0 ? (
