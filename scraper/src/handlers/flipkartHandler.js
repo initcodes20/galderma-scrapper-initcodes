@@ -1,7 +1,7 @@
 import { BaseScraper } from "../services/baseScraper.js";
 import { logger } from "../utils/logger.js";
 import { PriceUtils } from "../utils/priceUtils.js";
-import stringSimilarity from "string-similarity";
+import { pickBestMatch } from "../utils/quantityUtils.js";
 
 export class FlipkartHandler extends BaseScraper {
   async searchProduct(query) {
@@ -98,11 +98,10 @@ export class FlipkartHandler extends BaseScraper {
         return { status: 'error', price: null, url: null, error: 'No items parsed' };
       }
 
-      // Trust the platform's search engine. Pick the first result that contains the primary brand/keyword, or just the first result.
-      const mainKeyword = query.toLowerCase().split(' ')[0];
-      let bestMatch = items.find(item => item.title.toLowerCase().includes(mainKeyword)) || items[0];
+      // Use quantity-aware best match: prefer exact quantity match, fallback gracefully
+      const { item: bestMatch, quantityMismatch, requestedQty, foundQty } = pickBestMatch(items, query);
 
-      logger.info(`Flipkart: Fast Extract best match for "${query}" is "${bestMatch.title}"`);
+      logger.info(`Flipkart: Best match for "${query}" → "${bestMatch.title}"${ quantityMismatch ? ` [qty mismatch: wanted ${requestedQty}, got ${foundQty || 'unknown'}]` : '' }`);
       
       const cleanPrice = PriceUtils.clean(bestMatch.priceText);
       return { 
@@ -111,7 +110,10 @@ export class FlipkartHandler extends BaseScraper {
         url: bestMatch.url, 
         name: bestMatch.title, 
         image_url: bestMatch.image_url,
-        platform: 'flipkart'
+        platform: 'flipkart',
+        quantity_mismatch: quantityMismatch,
+        requested_qty: requestedQty,
+        found_qty: foundQty
       };
 
     } catch (err) {

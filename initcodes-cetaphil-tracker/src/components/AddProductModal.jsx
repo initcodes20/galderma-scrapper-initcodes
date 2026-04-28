@@ -126,13 +126,46 @@ export default function AddProductModal({ isOpen, onClose, onRefresh }) {
               <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#166534", marginBottom: "12px" }}>Search Results</h3>
               {searchResults.cached && <p style={{ fontSize: "12px", color: "green", marginBottom: "8px" }}>Loaded from cache!</p>}
               
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 {['amazon', 'flipkart', 'nykaa'].map(platform => {
                   const data = searchResults.results[platform];
+                  const hasMismatch = data && data.quantity_mismatch;
                   return (
-                    <div key={platform} style={{ display: "flex", justifyContent: "space-between", fontSize: "14px", color: "#065f46" }}>
-                      <span style={{ textTransform: "capitalize", fontWeight: 600 }}>{platform}:</span>
-                      <span>{data && data.price ? `₹${data.price}` : <span style={{color: "red"}}>Not Found</span>}</span>
+                    <div key={platform} style={{
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      background: hasMismatch ? "#fffbeb" : "#f0fdf4",
+                      border: `1px solid ${hasMismatch ? "#fcd34d" : "#bbf7d0"}`
+                    }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px", color: "#065f46" }}>
+                        <span style={{ textTransform: "capitalize", fontWeight: 700 }}>{platform}</span>
+                        <span style={{ fontWeight: 700 }}>
+                          {data && data.price
+                            ? `₹${data.price}`
+                            : <span style={{ color: "#ef4444", fontWeight: 600 }}>Not Found</span>
+                          }
+                        </span>
+                      </div>
+
+                      {data && data.name && (
+                        <div style={{ fontSize: "12px", color: "#6b7280", marginTop: "4px", lineClamp: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {data.name}
+                        </div>
+                      )}
+
+                      {hasMismatch && (
+                        <div style={{
+                          display: "flex", alignItems: "center", gap: "5px",
+                          marginTop: "6px", fontSize: "11px", color: "#92400e",
+                          background: "#fef3c7", borderRadius: "6px", padding: "4px 8px"
+                        }}>
+                          <span>⚠️</span>
+                          <span>
+                            Exact <strong>{data.requested_qty}</strong> not found —
+                            showing <strong>{data.found_qty || "different size"}</strong> instead
+                          </span>
+                        </div>
+                      )}
                     </div>
                   );
                 })}

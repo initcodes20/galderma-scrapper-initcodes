@@ -1,5 +1,4 @@
 import ProductCard from "@/components/ProductCard";
-import AddProductButton from "@/components/AddProductButton";
 import { createClient } from "@supabase/supabase-js";
 
 async function getProducts() {
@@ -87,23 +86,19 @@ export default async function HomePage() {
             ))}
           </div>
 
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <AddProductButton />
-          </div>
         </div>
       </section>
 
       {/* Products Grid */}
       <section style={{ padding: "44px 24px 80px" }}>
         <div className="container">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
+          <div style={{ marginBottom: 28 }}>
             <h2 style={{ fontSize: 20, fontWeight: 700, color: "#0f2b1a" }}>
               Tracked Products
               <span style={{ marginLeft: 10, fontSize: 14, fontWeight: 500, color: "#7aab90" }}>
                 {products.length} {products.length === 1 ? "product" : "products"}
               </span>
             </h2>
-            <AddProductButton />
           </div>
 
           {products.length === 0 ? (
@@ -115,10 +110,9 @@ export default async function HomePage() {
             }}>
               <div style={{ fontSize: 60, marginBottom: 16 }}>🧴</div>
               <h3 style={{ fontSize: 20, marginBottom: 8, color: "#0f2b1a" }}>No Products Yet</h3>
-              <p style={{ color: "#3d6b52", fontSize: 15, maxWidth: 380, margin: "0 auto 24px" }}>
-                Start tracking by adding a product sources from Amazon, Flipkart, or Nykaa.
+              <p style={{ color: "#3d6b52", fontSize: 15, maxWidth: 380, margin: "0 auto" }}>
+                No products are being tracked yet.
               </p>
-              <AddProductButton />
             </div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(310px, 1fr))", gap: 24 }}>
