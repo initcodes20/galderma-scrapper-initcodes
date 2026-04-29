@@ -1,6 +1,6 @@
 export const CONFIG = {
   BROWSER: {
-    HEADLESS: false, // Default to false for better stealth, can be toggled
+    HEADLESS: true, // Default to true for invisible scraping
     VIEWPORT: { width: 1280, height: 800 },
     TIMEOUT: 60000,
   },

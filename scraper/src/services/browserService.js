@@ -1,6 +1,9 @@
-import { chromium } from "playwright";
+import { chromium } from "playwright-extra";
+import stealthPlugin from "puppeteer-extra-plugin-stealth";
 import { CONFIG } from "../config/config.js";
 import { logger } from "../utils/logger.js";
+
+chromium.use(stealthPlugin());
 
 export class BrowserService {
   constructor() {
