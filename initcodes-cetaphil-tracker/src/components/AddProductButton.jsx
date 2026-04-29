@@ -16,25 +16,9 @@ export default function AddProductButton() {
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          padding: "12px 24px",
-          background: "linear-gradient(135deg, #16a34a, #059669)",
-          color: "#fff",
-          border: "none",
-          borderRadius: "12px",
-          fontWeight: 700,
-          cursor: "pointer",
-          fontSize: "14px",
-          boxShadow: "0 4px 12px rgba(22,163,74,0.2)",
-          transition: "transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
-        }}
-        onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-2px) scale(1.02)"}
-        onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0) scale(1)"}
+        className="btn btn-primary"
       >
-        <span style={{ fontSize: "18px" }}>+</span> Add Product
+        <span style={{ fontSize: "18px", fontWeight: "300" }}>+</span> Add Tracker
       </button>
 
       <AddProductModal

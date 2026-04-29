@@ -7,9 +7,9 @@ import {
 } from "recharts";
 
 const PLATFORM_COLORS = {
-  amazon: "#ea580c",
-  flipkart: "#2563eb",
-  nykaa: "#db2777",
+  amazon: "#f97316",
+  flipkart: "#3b82f6",
+  nykaa: "#ec4899",
 };
 
 function formatPrice(value) {
@@ -20,20 +20,27 @@ function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
     <div style={{
-      background: "#fff",
-      border: "1px solid #d1e8da",
-      borderRadius: 10,
-      padding: "12px 16px",
-      boxShadow: "0 4px 20px rgba(22,163,74,0.12)",
+      background: "rgba(17, 19, 26, 0.9)",
+      backdropFilter: "blur(12px)",
+      border: "1px solid rgba(255,255,255,0.1)",
+      borderRadius: 12,
+      padding: "16px 20px",
+      boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
     }}>
-      <p style={{ fontSize: 12, color: "#7aab90", marginBottom: 8 }}>
+      <p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 10, fontWeight: 600 }}>
         {new Date(label).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
       </p>
-      {payload.map((entry) => (
-        <p key={entry.name} style={{ color: entry.color, fontWeight: 700, fontSize: 14 }}>
-          {entry.name.charAt(0).toUpperCase() + entry.name.slice(1)}: {formatPrice(entry.value)}
-        </p>
-      ))}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {payload.map((entry) => (
+          <div key={entry.name} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: entry.color, boxShadow: `0 0 8px ${entry.color}` }}></div>
+            <p style={{ color: "#fff", fontWeight: 700, fontSize: 15, margin: 0, display: "flex", justifyContent: "space-between", flex: 1, gap: 16 }}>
+              <span style={{ textTransform: "capitalize", color: "#e2e8f0" }}>{entry.name}</span>
+              <span style={{ color: entry.color }}>{formatPrice(entry.value)}</span>
+            </p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -66,43 +73,45 @@ export default function PriceChart({ productId, activePlatforms }) {
   const platforms = activePlatforms || Object.keys(PLATFORM_COLORS);
 
   if (loading) {
-    return <div className="skeleton" style={{ height: 300, width: "100%" }} />;
+    return <div className="skeleton" style={{ height: 350, width: "100%", borderRadius: 16 }} />;
   }
 
   if (chartData.length === 0) {
     return (
-      <div style={{ height: 200, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8 }}>
-        <span style={{ fontSize: 40 }}>📉</span>
-        <p style={{ color: "#7aab90", fontSize: 14 }}>No price history yet. Run the scraper to start tracking.</p>
+      <div style={{ height: 250, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
+        <span style={{ fontSize: 48, filter: "grayscale(1) opacity(0.5)" }}>📉</span>
+        <p style={{ color: "var(--text-muted)", fontSize: 15 }}>No historical data available yet.</p>
       </div>
     );
   }
 
   return (
-    <ResponsiveContainer width="100%" height={320}>
-      <LineChart data={chartData} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e8f5ee" vertical={false} />
+    <ResponsiveContainer width="100%" height={380}>
+      <LineChart data={chartData} margin={{ top: 20, right: 20, left: 10, bottom: 10 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
         <XAxis
           dataKey="date"
           tickFormatter={(v) => new Date(v).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}
-          stroke="#d1e8da"
-          tick={{ fill: "#7aab90", fontSize: 11 }}
+          stroke="rgba(255,255,255,0.1)"
+          tick={{ fill: "#64748b", fontSize: 12, fontWeight: 600 }}
           axisLine={false}
           tickLine={false}
+          dy={10}
         />
         <YAxis
           tickFormatter={(v) => `₹${v.toLocaleString("en-IN")}`}
-          stroke="#d1e8da"
-          tick={{ fill: "#7aab90", fontSize: 11 }}
+          stroke="rgba(255,255,255,0.1)"
+          tick={{ fill: "#64748b", fontSize: 12, fontWeight: 600 }}
           axisLine={false}
           tickLine={false}
-          width={80}
+          width={70}
+          dx={-10}
         />
-        <Tooltip content={<CustomTooltip />} />
+        <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 2, strokeDasharray: '5 5' }} />
         <Legend
-          wrapperStyle={{ paddingTop: 16, fontSize: 13 }}
+          wrapperStyle={{ paddingTop: 24, fontSize: 14 }}
           formatter={(value) => (
-            <span style={{ color: PLATFORM_COLORS[value] || "#3d6b52", textTransform: "capitalize", fontWeight: 600 }}>
+            <span style={{ color: "#e2e8f0", textTransform: "capitalize", fontWeight: 700, marginLeft: 6 }}>
               {value}
             </span>
           )}
@@ -112,10 +121,10 @@ export default function PriceChart({ productId, activePlatforms }) {
             key={platform}
             type="monotone"
             dataKey={platform}
-            stroke={PLATFORM_COLORS[platform] || "#16a34a"}
-            strokeWidth={2.5}
-            dot={{ r: 3, fill: PLATFORM_COLORS[platform], strokeWidth: 0 }}
-            activeDot={{ r: 6, strokeWidth: 2, stroke: "#fff" }}
+            stroke={PLATFORM_COLORS[platform] || "var(--accent)"}
+            strokeWidth={3}
+            dot={{ r: 4, fill: "var(--bg-secondary)", stroke: PLATFORM_COLORS[platform], strokeWidth: 2 }}
+            activeDot={{ r: 8, strokeWidth: 0, fill: PLATFORM_COLORS[platform], style: { filter: `drop-shadow(0 0 8px ${PLATFORM_COLORS[platform]})` } }}
             connectNulls
           />
         ))}

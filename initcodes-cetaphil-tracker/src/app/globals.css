@@ -1,38 +1,51 @@
 @import "tailwindcss";
 
 /* ==========================================
-   DESIGN TOKENS — White & Green Theme
+   DESIGN TOKENS — Dark Glassmorphism Theme
 ========================================== */
 :root {
-  --bg-primary: #ffffff;
-  --bg-secondary: #f0faf4;
-  --bg-card: #ffffff;
-  --bg-card-hover: #f6fdf8;
-  --border: #d1e8da;
-  --border-hover: #86c9a0;
+  /* Backgrounds */
+  --bg-primary: #090a0f;
+  --bg-secondary: #11131a;
+  --bg-card: rgba(255, 255, 255, 0.03);
+  --bg-card-hover: rgba(255, 255, 255, 0.06);
+  --bg-glass: rgba(17, 19, 26, 0.65);
+  
+  /* Borders */
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(16, 185, 129, 0.3);
+  --border-glow: rgba(16, 185, 129, 0.5);
 
-  --text-primary: #0f2b1a;
-  --text-secondary: #3d6b52;
-  --text-muted: #7aab90;
+  /* Typography */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
 
-  --accent: #16a34a;
-  --accent-light: #22c55e;
-  --accent-dark: #15803d;
-  --accent-bg: #f0faf4;
-  --accent-bg-strong: #dcfce7;
+  /* Accents */
+  --accent: #10b981;
+  --accent-light: #34d399;
+  --accent-dark: #059669;
+  --accent-glow: rgba(16, 185, 129, 0.25);
+  --accent-bg: rgba(16, 185, 129, 0.1);
 
-  /* Platform colors */
-  --amazon: #ea580c;
-  --flipkart: #2563eb;
-  --nykaa: #db2777;
+  /* Platform Colors Optimized for Dark Mode */
+  --amazon: #f97316;
+  --amazon-bg: rgba(249, 115, 22, 0.1);
+  --flipkart: #3b82f6;
+  --flipkart-bg: rgba(59, 130, 246, 0.1);
+  --nykaa: #ec4899;
+  --nykaa-bg: rgba(236, 72, 153, 0.1);
 
+  /* Geometry */
   --radius-sm: 8px;
   --radius-md: 14px;
-  --radius-lg: 16px;
+  --radius-lg: 18px;
   --radius-xl: 24px;
 
-  --shadow-card: 0 2px 16px rgba(22, 163, 74, 0.08);
-  --shadow-card-hover: 0 6px 32px rgba(22, 163, 74, 0.15);
+  /* Shadows */
+  --shadow-glow: 0 0 24px rgba(16, 185, 129, 0.15);
+  --shadow-glow-hover: 0 0 32px rgba(16, 185, 129, 0.3);
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 /* ==========================================
@@ -51,34 +64,37 @@ html {
 }
 
 body {
-  background-color: var(--bg-secondary);
+  background-color: var(--bg-primary);
   color: var(--text-primary);
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Inter", "Geist", system-ui, sans-serif;
   line-height: 1.6;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(16, 185, 129, 0.05), transparent 25%),
+    radial-gradient(circle at 85% 30%, rgba(59, 130, 246, 0.04), transparent 25%);
 }
 
-h1,
-h2,
-h3,
-h4 {
-  font-weight: 700;
-  letter-spacing: -0.02em;
+h1, h2, h3, h4 {
+  font-weight: 800;
+  letter-spacing: -0.03em;
   color: var(--text-primary);
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f0faf4;
+  background: var(--bg-primary);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #86c9a0;
+  background: var(--border);
   border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
 
 /* ==========================================
@@ -91,43 +107,50 @@ h4 {
   padding: 0 24px;
 }
 
-.card {
+.glass-panel {
   background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  transition: all 0.22s ease;
+  box-shadow: var(--shadow-glass);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.card:hover {
+.glass-panel:hover {
   border-color: var(--border-hover);
-  box-shadow: var(--shadow-card-hover);
-  transform: translateY(-2px);
+  background: var(--bg-card-hover);
+  box-shadow: var(--shadow-glow-hover);
+  transform: translateY(-4px);
 }
 
 .btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 10px 20px;
+  padding: 12px 24px;
   border-radius: var(--radius-sm);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 14px;
   cursor: pointer;
   border: none;
-  transition: all 0.18s ease;
+  transition: all 0.2s ease;
   text-decoration: none;
+  letter-spacing: 0.02em;
 }
 
 .btn-primary {
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
   color: #fff;
+  box-shadow: 0 4px 14px var(--accent-glow);
+  border: 1px solid rgba(255,255,255,0.1);
 }
 
 .btn-primary:hover {
-  background: var(--accent-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+  filter: brightness(1.1);
 }
 
 .btn-ghost {
@@ -137,13 +160,14 @@ h4 {
 }
 
 .btn-ghost:hover {
-  border-color: var(--accent-light);
-  color: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-light);
   background: var(--accent-bg);
+  box-shadow: 0 0 12px var(--accent-glow);
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #16a34a, #059669);
+  background: linear-gradient(135deg, #34d399, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -155,9 +179,8 @@ h4 {
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(20px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -165,7 +188,7 @@ h4 {
 }
 
 .animate-fade-in {
-  animation: fadeInUp 0.4s ease forwards;
+  animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   opacity: 0;
 }
 
@@ -173,18 +196,13 @@ h4 {
    SKELETON
 ========================================== */
 .skeleton {
-  background: linear-gradient(90deg, #e8f5ee 0%, #d1eedd 50%, #e8f5ee 100%);
+  background: linear-gradient(90deg, var(--bg-secondary) 0%, rgba(255,255,255,0.05) 50%, var(--bg-secondary) 100%);
   background-size: 200% 100%;
-  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  animation: skeleton-shimmer 2s infinite linear;
   border-radius: var(--radius-sm);
 }
 
 @keyframes skeleton-shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-
-  100% {
-    background-position: -200% 0;
-  }
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }

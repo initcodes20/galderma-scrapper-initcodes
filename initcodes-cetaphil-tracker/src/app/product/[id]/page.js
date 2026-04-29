@@ -6,9 +6,9 @@ import PriceChart from "@/components/PriceChart";
 import PlatformPriceTable from "@/components/PlatformPriceTable";
 
 const PLATFORM_COLORS = {
-    amazon: "#ea580c",
-    flipkart: "#2563eb",
-    nykaa: "#db2777",
+    amazon: "var(--amazon)",
+    flipkart: "var(--flipkart)",
+    nykaa: "var(--nykaa)",
 };
 
 export default function ProductPage() {
@@ -37,11 +37,11 @@ export default function ProductPage() {
 
     if (loading) {
         return (
-            <div style={{ padding: "48px 24px" }}>
+            <div style={{ padding: "64px 24px" }}>
                 <div className="container">
-                    <div className="skeleton" style={{ height: 36, width: 280, marginBottom: 20 }} />
-                    <div className="skeleton" style={{ height: 200, marginBottom: 20 }} />
-                    <div className="skeleton" style={{ height: 300 }} />
+                    <div className="skeleton" style={{ height: 40, width: 300, marginBottom: 24 }} />
+                    <div className="skeleton" style={{ height: 240, marginBottom: 32, borderRadius: 24 }} />
+                    <div className="skeleton" style={{ height: 400, borderRadius: 24 }} />
                 </div>
             </div>
         );
@@ -49,8 +49,9 @@ export default function ProductPage() {
 
     if (!product || product.error) {
         return (
-            <div style={{ padding: "80px 24px", textAlign: "center" }}>
-                <h2 style={{ color: "#7aab90" }}>Product not found</h2>
+            <div style={{ padding: "100px 24px", textAlign: "center" }}>
+                <div style={{ fontSize: 64, marginBottom: 24, opacity: 0.5 }}>⚠️</div>
+                <h2 style={{ color: "var(--text-secondary)", fontSize: 24, fontWeight: 800 }}>Product not found</h2>
             </div>
         );
     }
@@ -62,72 +63,77 @@ export default function ProductPage() {
     const savings = lowestPrice && highestPrice ? highestPrice - lowestPrice : null;
 
     return (
-        <div style={{ minHeight: "100vh", background: "#f0faf4", paddingBottom: 80 }}>
-
-            {/* Header */}
+        <div style={{ minHeight: "100vh", paddingBottom: 100 }}>
+            {/* Header Area */}
             <div style={{
-                background: "linear-gradient(160deg, #f0fdf4, #dcfce7)",
-                borderBottom: "1px solid #d1e8da",
-                padding: "36px 24px 32px",
+                position: "relative",
+                padding: "48px 24px 64px",
+                borderBottom: "1px solid var(--border)",
+                overflow: "hidden"
             }}>
+                {/* Background glow */}
+                <div style={{ position: "absolute", top: -100, right: 0, width: "50%", height: 400, background: "var(--accent)", filter: "blur(120px)", opacity: 0.08, zIndex: -1 }}></div>
+
                 <div className="container">
                     <a
                         href="/"
-                        style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#7aab90", fontSize: 14, textDecoration: "none", marginBottom: 22, fontWeight: 500 }}
-                        onMouseEnter={e => e.currentTarget.style.color = "#16a34a"}
-                        onMouseLeave={e => e.currentTarget.style.color = "#7aab90"}
+                        style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "var(--text-secondary)", fontSize: 14, textDecoration: "none", marginBottom: 32, fontWeight: 600, transition: "color 0.2s" }}
+                        onMouseEnter={e => e.currentTarget.style.color = "var(--accent-light)"}
+                        onMouseLeave={e => e.currentTarget.style.color = "var(--text-secondary)"}
                     >
-                        ← Back to all products
+                        ← Return to Dashboard
                     </a>
 
-                    <div style={{ display: "flex", gap: 32, alignItems: "flex-start", flexWrap: "wrap" }}>
-                        {/* Image */}
+                    <div style={{ display: "flex", gap: 48, alignItems: "center", flexWrap: "wrap" }}>
+                        {/* Image Panel */}
                         <div style={{
-                            width: 190, height: 190,
-                            background: "#fff",
-                            borderRadius: 16,
-                            border: "1px solid #d1e8da",
-                            boxShadow: "0 2px 16px rgba(22,163,74,0.08)",
+                            width: 280, height: 280,
+                            background: "rgba(255,255,255,0.02)",
+                            borderRadius: 24,
+                            border: "1px solid rgba(255,255,255,0.05)",
+                            boxShadow: "0 24px 48px rgba(0,0,0,0.4)",
                             display: "flex", alignItems: "center", justifyContent: "center",
                             flexShrink: 0,
+                            position: "relative"
                         }}>
+                            <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 150, height: 150, background: "var(--accent)", filter: "blur(60px)", opacity: 0.1, borderRadius: "50%" }}></div>
                             {image_url ? (
-                                <img src={image_url} alt={name} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", padding: 16 }} />
+                                <img src={image_url} alt={name} style={{ maxWidth: "85%", maxHeight: "85%", objectFit: "contain", position: "relative", zIndex: 1, filter: "drop-shadow(0 20px 30px rgba(0,0,0,0.6))", mixBlendMode: "lighten" }} />
                             ) : (
-                                <span style={{ fontSize: 72, opacity: 0.35 }}>🧴</span>
+                                <span style={{ fontSize: 80, opacity: 0.2, filter: "grayscale(1)" }}>🔭</span>
                             )}
                         </div>
 
-                        {/* Info */}
-                        <div style={{ flex: 1, minWidth: 240 }}>
+                        {/* Product Info */}
+                        <div style={{ flex: 1, minWidth: 300 }}>
                             {brand && (
-                                <p style={{ color: "#16a34a", fontWeight: 700, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
+                                <div style={{ display: "inline-block", color: "var(--accent)", background: "var(--accent-bg)", padding: "4px 12px", borderRadius: 999, fontWeight: 800, fontSize: 12, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 16, border: "1px solid var(--border-glow)" }}>
                                     {brand}
-                                </p>
+                                </div>
                             )}
-                            <h1 style={{ fontSize: "clamp(20px, 3vw, 30px)", fontWeight: 800, lineHeight: 1.25, color: "#0f2b1a", marginBottom: 10 }}>
+                            <h1 style={{ fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 800, lineHeight: 1.2, color: "#fff", marginBottom: 16, letterSpacing: "-0.02em" }}>
                                 {name}
                             </h1>
                             {description && (
-                                <p style={{ fontSize: 15, color: "#3d6b52", lineHeight: 1.6, marginBottom: 20 }}>
+                                <p style={{ fontSize: 16, color: "var(--text-secondary)", lineHeight: 1.6, marginBottom: 32, maxWidth: 600 }}>
                                     {description}
                                 </p>
                             )}
 
                             {lowestPrice && (
-                                <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+                                <div style={{ display: "flex", gap: 40, flexWrap: "wrap", padding: "20px 24px", background: "rgba(255,255,255,0.03)", borderRadius: 16, border: "1px solid rgba(255,255,255,0.05)", display: "inline-flex" }}>
                                     <div>
-                                        <div style={{ fontSize: 30, fontWeight: 800, color: "#16a34a" }}>
+                                        <div style={{ fontSize: 12, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 700, marginBottom: 4 }}>Best Market Price</div>
+                                        <div className="gradient-text" style={{ fontSize: 36, fontWeight: 800 }}>
                                             ₹{lowestPrice.toLocaleString("en-IN")}
                                         </div>
-                                        <div style={{ fontSize: 12, color: "#7aab90" }}>Lowest price</div>
                                     </div>
                                     {savings > 0 && (
-                                        <div>
-                                            <div style={{ fontSize: 30, fontWeight: 800, color: "#059669" }}>
+                                        <div style={{ paddingLeft: 40, borderLeft: "1px solid rgba(255,255,255,0.1)" }}>
+                                            <div style={{ fontSize: 12, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 700, marginBottom: 4 }}>Maximum Savings</div>
+                                            <div style={{ fontSize: 36, fontWeight: 800, color: "var(--text-primary)" }}>
                                                 ₹{savings.toLocaleString("en-IN")}
                                             </div>
-                                            <div style={{ fontSize: 12, color: "#7aab90" }}>Max savings</div>
                                         </div>
                                     )}
                                 </div>
@@ -137,26 +143,28 @@ export default function ProductPage() {
                 </div>
             </div>
 
-            {/* Content */}
-            <div style={{ padding: "36px 24px" }}>
+            {/* Dashboard Content */}
+            <div style={{ padding: "48px 24px" }}>
                 <div className="container">
-                    <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: 32, alignItems: "start" }}>
 
-                        {/* Price Comparison */}
-                        <div className="card" style={{ padding: 28 }}>
-                            <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 20, color: "#0f2b1a" }}>
-                                💰 Current Prices
+                        {/* Live Prices */}
+                        <div className="glass-panel" style={{ padding: 32 }}>
+                            <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 24, color: "#fff", display: "flex", alignItems: "center", gap: 10 }}>
+                                <span style={{ fontSize: 24 }}>🛒</span> Live Vendor Prices
                             </h2>
                             <PlatformPriceTable platformPrices={platform_prices} buyLinks={buy_links} />
                         </div>
 
-                        {/* Price History */}
-                        <div className="card" style={{ padding: 28 }}>
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 24 }}>
-                                <h2 style={{ fontSize: 17, fontWeight: 700, color: "#0f2b1a" }}>📈 Price History</h2>
+                        {/* Chart Analytics */}
+                        <div className="glass-panel" style={{ padding: 32 }}>
+                            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 32 }}>
+                                <h2 style={{ fontSize: 20, fontWeight: 800, color: "#fff", display: "flex", alignItems: "center", gap: 10 }}>
+                                    <span style={{ fontSize: 24 }}>📈</span> Price Analytics
+                                </h2>
 
-                                {/* Platform filter */}
-                                <div style={{ display: "flex", gap: 8 }}>
+                                {/* Platform filter toggles */}
+                                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                                     {Object.entries(PLATFORM_COLORS).map(([platform, color]) => {
                                         const isActive = activePlatforms.includes(platform);
                                         return (
@@ -164,13 +172,14 @@ export default function ProductPage() {
                                                 key={platform}
                                                 onClick={() => togglePlatform(platform)}
                                                 style={{
-                                                    padding: "6px 14px", borderRadius: 999,
-                                                    border: `1px solid ${isActive ? color : "#d1e8da"}`,
-                                                    background: isActive ? `${color}18` : "#fff",
-                                                    color: isActive ? color : "#7aab90",
-                                                    fontSize: 12, fontWeight: 600,
+                                                    padding: "8px 16px", borderRadius: 999,
+                                                    border: `1px solid ${isActive ? color : "rgba(255,255,255,0.1)"}`,
+                                                    background: isActive ? `${color}22` : "rgba(255,255,255,0.03)",
+                                                    color: isActive ? color : "var(--text-muted)",
+                                                    fontSize: 13, fontWeight: 700,
                                                     cursor: "pointer", textTransform: "capitalize",
-                                                    transition: "all 0.18s ease",
+                                                    transition: "all 0.2s ease",
+                                                    boxShadow: isActive ? `0 0 12px ${color}33` : "none"
                                                 }}
                                             >
                                                 {platform}

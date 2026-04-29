@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 const PLATFORM_META = {
-    amazon: { label: "Amazon", color: "#ea580c", bg: "rgba(234,88,12,0.07)" },
-    flipkart: { label: "Flipkart", color: "#2563eb", bg: "rgba(37,99,235,0.07)" },
-    nykaa: { label: "Nykaa", color: "#db2777", bg: "rgba(219,39,119,0.07)" },
+    amazon: { label: "Amazon", color: "var(--amazon)", bg: "var(--amazon-bg)" },
+    flipkart: { label: "Flipkart", color: "var(--flipkart)", bg: "var(--flipkart-bg)" },
+    nykaa: { label: "Nykaa", color: "var(--nykaa)", bg: "var(--nykaa-bg)" },
 };
 
 function formatPrice(price) {
@@ -31,7 +31,7 @@ export default function ProductCard({ product }) {
     const [isDeleting, setIsDeleting] = useState(false);
 
     const handleDelete = async (e) => {
-        e.preventDefault(); // Prevent navigating to the product page
+        e.preventDefault();
         
         if (!confirm(`Are you sure you want to stop tracking "${name}"?`)) {
             return;
@@ -42,7 +42,7 @@ export default function ProductCard({ product }) {
             const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
             if (!res.ok) throw new Error("Failed to delete product");
             
-            router.refresh(); // Refresh the page to remove the product
+            router.refresh();
         } catch (err) {
             alert(err.message);
             setIsDeleting(false);
@@ -52,112 +52,120 @@ export default function ProductCard({ product }) {
     return (
         <Link href={`/product/${id}`} style={{ textDecoration: "none", display: "block", height: "100%" }}>
             <div
-                className="card"
+                className="glass-panel"
                 style={{ overflow: "hidden", cursor: "pointer", height: "100%", display: "flex", flexDirection: "column" }}
             >
-                {/* Image */}
+                {/* Image Area */}
                 <div
                     style={{
-                        background: "linear-gradient(135deg, #f0fdf4, #dcfce7)",
+                        background: "rgba(255,255,255,0.02)",
+                        borderBottom: "1px solid var(--border)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        height: 200,
-                        borderRadius: "16px 16px 0 0",
-                        overflow: "hidden",
+                        height: 220,
                         position: "relative",
+                        overflow: "hidden"
                     }}
                 >
+                    {/* Subtle glow behind image */}
+                    <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 100, height: 100, background: "var(--accent)", filter: "blur(60px)", opacity: 0.15, borderRadius: "50%" }}></div>
+
                     {image_url ? (
-                        <img src={image_url} alt={name} style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain", padding: 16 }} />
+                        <img src={image_url} alt={name} style={{ maxHeight: "85%", maxWidth: "85%", objectFit: "contain", position: "relative", zIndex: 1, filter: "drop-shadow(0 10px 20px rgba(0,0,0,0.5))", mixBlendMode: "lighten" }} />
                     ) : (
-                        <div style={{ fontSize: 64, opacity: 0.4 }}>🧴</div>
+                        <div style={{ fontSize: 64, opacity: 0.2, filter: "grayscale(1)" }}>🔭</div>
                     )}
 
+                    {/* Delete Button */}
                     <div 
                         onClick={handleDelete}
                         style={{
                             position: "absolute", top: 12, left: 12,
-                            background: "rgba(220, 38, 38, 0.9)", color: "#fff",
-                            fontSize: 16, width: 28, height: 28,
+                            background: "rgba(239, 68, 68, 0.15)", color: "#ef4444",
+                            border: "1px solid rgba(239, 68, 68, 0.3)",
+                            fontSize: 18, width: 32, height: 32,
                             display: "flex", alignItems: "center", justifyContent: "center",
                             borderRadius: "50%", cursor: "pointer",
-                            boxShadow: "0 2px 8px rgba(220, 38, 38, 0.35)",
-                            opacity: isDeleting ? 0.5 : 1
+                            backdropFilter: "blur(4px)",
+                            transition: "all 0.2s",
+                            opacity: isDeleting ? 0.5 : 0.7,
+                            zIndex: 10
                         }}
+                        onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.background = "rgba(239, 68, 68, 0.3)" }}
+                        onMouseLeave={e => { e.currentTarget.style.opacity = 0.7; e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)" }}
                         title="Delete Product"
                     >
                         ×
                     </div>
 
+                    {/* Best Price Badge */}
                     {bestPlatform && (
                         <div style={{
                             position: "absolute", top: 12, right: 12,
-                            background: "#16a34a", color: "#fff",
-                            fontSize: 11, fontWeight: 700,
-                            padding: "4px 10px", borderRadius: 999,
-                            boxShadow: "0 2px 8px rgba(22,163,74,0.35)",
+                            background: "rgba(16, 185, 129, 0.15)", color: "var(--accent-light)",
+                            border: "1px solid var(--border-glow)",
+                            fontSize: 12, fontWeight: 700,
+                            padding: "6px 12px", borderRadius: 999,
+                            backdropFilter: "blur(8px)",
+                            boxShadow: "0 4px 12px var(--accent-glow)",
+                            zIndex: 10
                         }}>
-                            Best: {formatPrice(bestPrice)}
+                            Lowest: {formatPrice(bestPrice)}
                         </div>
                     )}
                 </div>
 
                 {/* Content */}
-                <div style={{ padding: 20, flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
-                    {brand && (
-                        <span style={{ fontSize: 11, color: "#16a34a", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                            {brand}
-                        </span>
-                    )}
-
-                    <h3 style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.4, color: "#0f2b1a" }}>
-                        {name || "Untitled Product"}
-                    </h3>
+                <div style={{ padding: "20px 24px", flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div>
+                        {brand && (
+                            <div style={{ fontSize: 11, color: "var(--accent-light)", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>
+                                {brand}
+                            </div>
+                        )}
+                        <h3 style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.4, color: "var(--text-primary)" }}>
+                            {name || "Untitled Product"}
+                        </h3>
+                    </div>
 
                     {description && (
-                        <p style={{ fontSize: 13, color: "#3d6b52", lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                        <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                             {description}
                         </p>
                     )}
 
                     {/* Platform prices */}
-                    <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 7 }}>
+                    <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 8, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                         {validPrices.length === 0 ? (
-                            <p style={{ fontSize: 13, color: "#7aab90" }}>No price data yet — run the scraper.</p>
+                            <p style={{ fontSize: 13, color: "var(--text-muted)", fontStyle: "italic", textAlign: "center", padding: "12px 0" }}>No price data yet. Pending scrape...</p>
                         ) : (
                             validPrices.map(([platform, data]) => {
-                                const meta = PLATFORM_META[platform] || { label: platform, color: "#3d6b52", bg: "#f0faf4" };
+                                const meta = PLATFORM_META[platform] || { label: platform, color: "var(--text-secondary)", bg: "rgba(255,255,255,0.05)" };
                                 const isBest = platform === bestPlatform;
                                 return (
                                     <div
                                         key={platform}
                                         style={{
                                             display: "flex", alignItems: "center", justifyContent: "space-between",
-                                            padding: "8px 12px", borderRadius: 8,
-                                            background: isBest ? "#f0fdf4" : meta.bg,
-                                            border: `1px solid ${isBest ? "#86efac" : "transparent"}`,
+                                            padding: "10px 14px", borderRadius: 10,
+                                            background: isBest ? "rgba(16, 185, 129, 0.08)" : meta.bg,
+                                            border: `1px solid ${isBest ? "rgba(16, 185, 129, 0.3)" : "rgba(255,255,255,0.03)"}`,
+                                            position: "relative",
+                                            overflow: "hidden"
                                         }}
                                     >
-                                        <span style={{ fontSize: 13, color: meta.color, fontWeight: 600 }}>{meta.label}</span>
+                                        {isBest && <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: "var(--accent)" }}></div>}
+                                        <span style={{ fontSize: 13, color: meta.color, fontWeight: 700, paddingLeft: isBest ? 6 : 0 }}>{meta.label}</span>
                                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                            <span style={{ fontSize: 15, fontWeight: 800, color: isBest ? "#16a34a" : "#0f2b1a" }}>
+                                            <span style={{ fontSize: 15, fontWeight: 800, color: isBest ? "var(--accent-light)" : "var(--text-primary)" }}>
                                                 {formatPrice(data.price)}
                                             </span>
-                                            {isBest && (
-                                                <span style={{ fontSize: 10, fontWeight: 700, color: "#fff", background: "#16a34a", padding: "2px 6px", borderRadius: 999 }}>
-                                                    LOWEST
-                                                </span>
-                                            )}
                                         </div>
                                     </div>
                                 );
                             })
                         )}
-                    </div>
-
-                    <div style={{ color: "#16a34a", fontSize: 13, fontWeight: 600, marginTop: 6 }}>
-                        View price history →
                     </div>
                 </div>
             </div>

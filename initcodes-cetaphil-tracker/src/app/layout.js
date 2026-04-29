@@ -29,7 +29,7 @@ export default function RootLayout({ children }) {
           rel="stylesheet"
         />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} style={{ background: "var(--bg-primary)", color: "var(--text-primary)" }}>
         <Navbar />
         <main>{children}</main>
       </body>

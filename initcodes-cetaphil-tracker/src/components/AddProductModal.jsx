@@ -75,29 +75,38 @@ export default function AddProductModal({ isOpen, onClose, onRefresh }) {
   return (
     <div style={{
       position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-      background: "rgba(0,0,0,0.5)", display: "flex",
+      background: "rgba(0, 0, 0, 0.75)", display: "flex",
       alignItems: "center", justifyContent: "center", zIndex: 1000,
-      backdropFilter: "blur(4px)"
+      backdropFilter: "blur(12px)"
     }}>
-      <div style={{
-        background: "#fff", padding: "32px", borderRadius: "20px",
-        width: "90%", maxWidth: "500px", boxShadow: "0 20px 40px rgba(0,0,0,0.15)"
+      <div className="animate-fade-in" style={{
+        background: "var(--bg-secondary)", padding: "32px", borderRadius: "24px",
+        width: "90%", maxWidth: "520px", boxShadow: "0 24px 64px rgba(0,0,0,0.5)",
+        border: "1px solid rgba(255,255,255,0.1)", position: "relative",
+        overflow: "hidden"
       }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-          <h2 style={{ fontSize: "22px", fontWeight: 800, color: "#0f2b1a" }}>Search & Add Product</h2>
-          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: "24px", cursor: "pointer", color: "#7aab90" }}>×</button>
+        {/* Glow effect */}
+        <div style={{ position: "absolute", top: -100, right: -100, width: 200, height: 200, background: "var(--accent)", filter: "blur(80px)", opacity: 0.15, borderRadius: "50%", pointerEvents: "none" }}></div>
+
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "28px", position: "relative", zIndex: 1 }}>
+          <h2 style={{ fontSize: "22px", fontWeight: 800, color: "#fff", display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 24 }}>✨</span> Track New Item
+          </h2>
+          <button onClick={onClose} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "50%", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", cursor: "pointer", color: "var(--text-secondary)", transition: "all 0.2s" }} onMouseEnter={e => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.background = "rgba(255,255,255,0.1)" }} onMouseLeave={e => { e.currentTarget.style.color = "var(--text-secondary)"; e.currentTarget.style.background = "rgba(255,255,255,0.05)" }}>×</button>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px", position: "relative", zIndex: 1 }}>
           <div>
-            <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "#3d6b52", marginBottom: "6px" }}>Product Name</label>
+            <label style={{ display: "block", fontSize: "13px", fontWeight: 700, color: "var(--text-secondary)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Product Name</label>
             <input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Cetaphil Cleanser 118ml"
-              style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #d1e8da", outline: "none", boxSizing: "border-box" }}
+              style={{ width: "100%", padding: "14px 16px", borderRadius: "12px", background: "rgba(0,0,0,0.2)", border: "1px solid var(--border)", outline: "none", boxSizing: "border-box", color: "#fff", fontSize: 15, transition: "border-color 0.2s, box-shadow 0.2s" }}
+              onFocus={e => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(16, 185, 129, 0.15)" }}
+              onBlur={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.boxShadow = "none" }}
               disabled={loading || searchResults}
             />
           </div>
@@ -106,63 +115,69 @@ export default function AddProductModal({ isOpen, onClose, onRefresh }) {
             <button
               onClick={handleSearch}
               disabled={loading || !name.trim()}
-              style={{
-                padding: "14px",
-                background: "linear-gradient(135deg, #16a34a, #059669)",
-                color: "#fff", border: "none", borderRadius: "12px",
-                fontWeight: 700, cursor: "pointer", fontSize: "15px",
-                boxShadow: "0 4px 12px rgba(22,163,74,0.2)",
-                opacity: loading || !name.trim() ? 0.7 : 1
-              }}
+              className="btn btn-primary"
+              style={{ padding: "16px", width: "100%", fontSize: 16, marginTop: 8 }}
             >
-              {loading ? "Searching Multi-Platform..." : "Find Product"}
+              {loading ? (
+                 <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>⟳</span> Scraping Platforms...
+                 </span>
+              ) : "Find Best Prices"}
             </button>
           )}
 
-          {searchError && <p style={{ color: "red", fontSize: "13px" }}>{searchError}</p>}
+          {searchError && <div style={{ padding: "12px", background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)", borderRadius: 10, color: "#f87171", fontSize: "13px" }}>{searchError}</div>}
 
           {searchResults && (
-            <div style={{ marginTop: "16px", padding: "16px", borderRadius: "12px", background: "#f0fdf4", border: "1px solid #dcfce7" }}>
-              <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#166534", marginBottom: "12px" }}>Search Results</h3>
-              {searchResults.cached && <p style={{ fontSize: "12px", color: "green", marginBottom: "8px" }}>Loaded from cache!</p>}
+            <div className="animate-fade-in" style={{ marginTop: "8px", padding: "20px", borderRadius: "16px", background: "rgba(0,0,0,0.2)", border: "1px solid var(--border)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                <h3 style={{ fontSize: "16px", fontWeight: 700, color: "var(--accent-light)" }}>Search Results</h3>
+                {searchResults.cached && <span style={{ fontSize: "11px", color: "var(--accent)", background: "var(--accent-bg)", padding: "4px 8px", borderRadius: 999, fontWeight: 700 }}>CACHED</span>}
+              </div>
               
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 {['amazon', 'flipkart', 'nykaa'].map(platform => {
                   const data = searchResults.results[platform];
                   const hasMismatch = data && data.quantity_mismatch;
+                  
+                  // Default colors
+                  let platformColor = "var(--text-secondary)";
+                  if (platform === 'amazon') platformColor = "var(--amazon)";
+                  if (platform === 'flipkart') platformColor = "var(--flipkart)";
+                  if (platform === 'nykaa') platformColor = "var(--nykaa)";
+
                   return (
                     <div key={platform} style={{
-                      padding: "10px 12px",
-                      borderRadius: "10px",
-                      background: hasMismatch ? "#fffbeb" : "#f0fdf4",
-                      border: `1px solid ${hasMismatch ? "#fcd34d" : "#bbf7d0"}`
+                      padding: "12px 16px",
+                      borderRadius: "12px",
+                      background: hasMismatch ? "rgba(245, 158, 11, 0.05)" : "rgba(255,255,255,0.03)",
+                      border: `1px solid ${hasMismatch ? "rgba(245, 158, 11, 0.2)" : "rgba(255,255,255,0.05)"}`
                     }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px", color: "#065f46" }}>
-                        <span style={{ textTransform: "capitalize", fontWeight: 700 }}>{platform}</span>
-                        <span style={{ fontWeight: 700 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px" }}>
+                        <span style={{ textTransform: "capitalize", fontWeight: 700, color: platformColor }}>{platform}</span>
+                        <span style={{ fontWeight: 800, color: data && data.price ? "#fff" : "var(--text-muted)" }}>
                           {data && data.price
-                            ? `₹${data.price}`
-                            : <span style={{ color: "#ef4444", fontWeight: 600 }}>Not Found</span>
+                            ? `₹${data.price.toLocaleString('en-IN')}`
+                            : <span>Not Found</span>
                           }
                         </span>
                       </div>
 
                       {data && data.name && (
-                        <div style={{ fontSize: "12px", color: "#6b7280", marginTop: "4px", lineClamp: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "6px", lineClamp: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {data.name}
                         </div>
                       )}
 
                       {hasMismatch && (
                         <div style={{
-                          display: "flex", alignItems: "center", gap: "5px",
-                          marginTop: "6px", fontSize: "11px", color: "#92400e",
-                          background: "#fef3c7", borderRadius: "6px", padding: "4px 8px"
+                          display: "flex", alignItems: "center", gap: "6px",
+                          marginTop: "8px", fontSize: "12px", color: "#fbbf24",
+                          background: "rgba(245, 158, 11, 0.1)", borderRadius: "8px", padding: "6px 10px"
                         }}>
                           <span>⚠️</span>
                           <span>
-                            Exact <strong>{data.requested_qty}</strong> not found —
-                            showing <strong>{data.found_qty || "different size"}</strong> instead
+                            Wanted <strong>{data.requested_qty}</strong> — Found <strong>{data.found_qty || "different size"}</strong>
                           </span>
                         </div>
                       )}
@@ -171,33 +186,27 @@ export default function AddProductModal({ isOpen, onClose, onRefresh }) {
                 })}
               </div>
 
-              <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: "1px solid #bbf7d0", display: "flex", justifyContent: "space-between", fontWeight: 800, color: "#166534", fontSize: "16px" }}>
-                <span>Best Price:</span>
-                <span>{searchResults.best_price ? `₹${searchResults.best_price}` : 'N/A'}</span>
+              <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", fontWeight: 800, color: "#fff", fontSize: "16px" }}>
+                <span>Best Available Price:</span>
+                <span style={{ color: "var(--accent-light)" }}>{searchResults.best_price ? `₹${searchResults.best_price.toLocaleString('en-IN')}` : 'N/A'}</span>
               </div>
 
               <button
                 onClick={handleSave}
                 disabled={loading}
-                style={{
-                  marginTop: "24px", width: "100%", padding: "14px",
-                  background: "#059669", color: "#fff", border: "none", borderRadius: "12px",
-                  fontWeight: 700, cursor: "pointer", fontSize: "15px"
-                }}
+                className="btn btn-primary"
+                style={{ marginTop: "24px", width: "100%", padding: "16px", fontSize: 16 }}
               >
-                {loading ? "Saving to Tracker..." : "Save to Tracker"}
+                {loading ? "Adding to Dashboard..." : "Track This Product"}
               </button>
               
               <button
                 onClick={() => setSearchResults(null)}
                 disabled={loading}
-                style={{
-                  marginTop: "8px", width: "100%", padding: "10px",
-                  background: "transparent", color: "#059669", border: "1px solid #059669", borderRadius: "12px",
-                  fontWeight: 600, cursor: "pointer", fontSize: "14px"
-                }}
+                className="btn btn-ghost"
+                style={{ marginTop: "12px", width: "100%", padding: "12px", fontSize: 14 }}
               >
-                Try Another Search
+                ← Edit Search Query
               </button>
             </div>
           )}
