@@ -18,7 +18,7 @@ export class SearchService {
 
   async initBrowser() {
     if (!this.initialized) {
-      await this.browserService.init({ headless: true }); // Must be headless on cloud servers (no display)
+      await this.browserService.init(); // Respects CONFIG.BROWSER.HEADLESS
       this.initialized = true;
     }
   }
