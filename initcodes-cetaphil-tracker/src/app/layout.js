@@ -29,9 +29,39 @@ export default function RootLayout({ children }) {
           rel="stylesheet"
         />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} style={{ background: "var(--bg-primary)", color: "var(--text-primary)" }}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} style={{ background: "var(--bg-primary)", color: "var(--text-primary)", display: "flex", flexDirection: "column", minHeight: "100vh" }}>
         <Navbar />
-        <main>{children}</main>
+        <main style={{ flex: 1 }}>{children}</main>
+        
+        {/* Initcodes Watermark */}
+        <footer style={{ 
+          padding: "2rem 0", 
+          display: "flex", 
+          flexDirection: "column", 
+          alignItems: "center", 
+          justifyContent: "center",
+          opacity: 0.6,
+          marginTop: "auto"
+        }}>
+          <div style={{
+            fontFamily: "var(--font-geist-mono), monospace",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "0.25rem",
+            userSelect: "none"
+          }}>
+            <div style={{ fontSize: "1.5rem", fontWeight: "bold", letterSpacing: "2px" }}>
+              &lt; INIT &gt;
+            </div>
+            <div style={{ fontSize: "0.75rem", fontWeight: "600", letterSpacing: "1px" }}>
+              CODES
+            </div>
+          </div>
+          <div style={{ fontSize: "0.7rem", marginTop: "0.5rem", opacity: 0.7 }}>
+            Powered by Initcodes
+          </div>
+        </footer>
       </body>
     </html>
   );
