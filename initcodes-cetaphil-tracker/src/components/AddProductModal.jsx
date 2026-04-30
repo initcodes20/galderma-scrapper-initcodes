@@ -111,6 +111,38 @@ export default function AddProductModal({ isOpen, onClose, onRefresh }) {
             />
           </div>
 
+          {!searchResults && !loading && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "-8px" }}>
+              {[
+                "CETAPHIL Cleanser Lotion 118ml",
+                "CETAPHIL Moisturizer Cream 100g",
+                "CETAPHIL Baby Daily Lotion 400ml",
+                "CETAPHIL Oily Skin Cleanser 118ml",
+                "CETAPHIL Sun SPF50+ Cream Gel 50ml",
+                "CETAPHIL Gentle Skin Cleanser 236ml"
+              ].map(item => (
+                <button
+                  key={item}
+                  onClick={() => setName(item)}
+                  style={{
+                    fontSize: "11px",
+                    padding: "6px 12px",
+                    borderRadius: "20px",
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    color: "var(--text-secondary)",
+                    cursor: "pointer",
+                    transition: "all 0.2s"
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)" }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)" }}
+                >
+                  {item.replace("CETAPHIL ", "")}
+                </button>
+              ))}
+            </div>
+          )}
+
           {!searchResults && (
             <button
               onClick={handleSearch}
