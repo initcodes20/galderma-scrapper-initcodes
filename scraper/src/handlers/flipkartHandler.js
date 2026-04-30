@@ -9,19 +9,22 @@ export class FlipkartHandler extends BaseScraper {
       const searchUrl = `https://www.flipkart.com/search?q=${encodeURIComponent(query)}`;
       await this.navigateWithRetry(searchUrl, { waitUntil: 'domcontentloaded' });
 
-      // Close login popup if present
+      // Close login popup if present - Flipkart changed their selectors
       try {
-        const closeBtn = await this.page.$("button._2KpZ6l._2doB4z");
+        await this.page.keyboard.press('Escape');
+        await this.delay(500);
+        const closeBtn = await this.page.$("button._2KpZ6l._2doB4z, span._30vH1L, button.L033_c");
         if (closeBtn) await closeBtn.click();
       } catch (e) {}
 
       // Wait for any of the known result selectors (new or old layout)
       const resultsLoaded = await this.waitForSelectorSafe(
-        'a.pIpigb, [data-id], .cPHDOP',
-        10000
+        'a.pIpigb, [data-id], .cPHDOP, div[data-tracking-id]',
+        15000
       );
       if (!resultsLoaded) {
-        logger.warn(`Flipkart: No search results loaded for "${query}".`);
+        const title = await this.page.title();
+        logger.warn(`Flipkart: No search results loaded for "${query}". Title: "${title}"`);
         return { status: 'error', price: null, url: null, error: 'No results' };
       }
 

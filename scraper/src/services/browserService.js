@@ -40,10 +40,11 @@ export class BrowserService {
     logger.info(`Memory Usage: RSS: ${Math.round(mem.rss / 1024 / 1024)}MB, Heap: ${Math.round(mem.heapUsed / 1024 / 1024)}MB`);
 
     const userAgent = CONFIG.USER_AGENTS[Math.floor(Math.random() * CONFIG.USER_AGENTS.length)];
-    logger.info(`Creating isolated browser context with User-Agent: ${userAgent}`);
+    const viewport = CONFIG.VIEWPORTS[Math.floor(Math.random() * CONFIG.VIEWPORTS.length)];
+    logger.info(`Creating isolated browser context with User-Agent: ${userAgent} and Viewport: ${viewport.width}x${viewport.height}`);
 
     const context = await this.browser.newContext({
-      viewport: CONFIG.BROWSER.VIEWPORT,
+      viewport: viewport,
       userAgent: userAgent,
       deviceScaleFactor: 1,
       hasTouch: false,

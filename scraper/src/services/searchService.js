@@ -120,8 +120,8 @@ export class SearchService {
         logger.info(`Starting search for ${platform}...`);
         results[platform] = await this.searchPlatform(platform, query);
         
-        // Add a small delay between platforms to avoid detection
-        await new Promise(r => setTimeout(r, 2000));
+        // Add a 4-second delay between platforms to avoid detection and let the IP "cool down"
+        await new Promise(r => setTimeout(r, 4000));
       } catch (err) {
         logger.error(`Failed to search ${platform}:`, err);
         results[platform] = { status: 'error', price: null, error: err.message };
