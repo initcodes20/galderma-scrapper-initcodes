@@ -14,7 +14,7 @@ export class BrowserService {
   async init(options = {}) {
     const headless = options.headless !== undefined ? options.headless : CONFIG.BROWSER.HEADLESS;
     
-    logger.info(`Starting browser (headless: ${headless})...`);
+    logger.info(`Starting browser engine (headless: ${headless})...`);
     
     this.browser = await chromium.launch({
       headless: headless,
@@ -29,17 +29,20 @@ export class BrowserService {
       ],
     });
 
-    await this.createNewContext();
-    return { browser: this.browser, context: this.context };
+    return { browser: this.browser };
   }
 
-  async createNewContext() {
-    if (this.context) await this.context.close().catch(() => {});
+  async createPage() {
+    if (!this.browser) throw new Error("Browser not launched. Call init() first.");
     
-    const userAgent = CONFIG.USER_AGENTS[Math.floor(Math.random() * CONFIG.USER_AGENTS.length)];
-    logger.info(`Creating new browser context with User-Agent: ${userAgent}`);
+    // Log memory usage
+    const mem = process.memoryUsage();
+    logger.info(`Memory Usage: RSS: ${Math.round(mem.rss / 1024 / 1024)}MB, Heap: ${Math.round(mem.heapUsed / 1024 / 1024)}MB`);
 
-    this.context = await this.browser.newContext({
+    const userAgent = CONFIG.USER_AGENTS[Math.floor(Math.random() * CONFIG.USER_AGENTS.length)];
+    logger.info(`Creating isolated browser context with User-Agent: ${userAgent}`);
+
+    const context = await this.browser.newContext({
       viewport: CONFIG.BROWSER.VIEWPORT,
       userAgent: userAgent,
       deviceScaleFactor: 1,
@@ -58,30 +61,21 @@ export class BrowserService {
     });
 
     // Stealth script
-    await this.context.addInitScript(() => {
+    await context.addInitScript(() => {
       Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
       window.chrome = { runtime: {} };
       Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
       Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
     });
-  }
 
-  async createPage() {
-    if (!this.browser) throw new Error("Browser not launched. Call init() first.");
-    
-    // Log memory usage to help debug Render resource limits
-    const mem = process.memoryUsage();
-    logger.info(`Memory Usage: RSS: ${Math.round(mem.rss / 1024 / 1024)}MB, Heap: ${Math.round(mem.heapUsed / 1024 / 1024)}MB`);
-
-    // Create a new context for every page to maximize isolation and rotation
-    await this.createNewContext();
-    return await this.context.newPage();
+    return await context.newPage();
   }
 
   async close() {
     if (this.browser) {
       await this.browser.close();
-      logger.info("Browser closed.");
+      this.browser = null;
+      logger.info("Browser engine stopped.");
     }
   }
 }

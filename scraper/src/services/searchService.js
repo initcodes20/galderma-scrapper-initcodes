@@ -81,7 +81,11 @@ export class SearchService {
                              });
                          }
                      }
-                     await page.close().catch(() => {});
+                     if (page) {
+                         const context = page.context();
+                         await page.close().catch(() => {});
+                         await context.close().catch(() => {});
+                     }
                      // Brief pause between sources
                      await new Promise(r => setTimeout(r, 2000));
                  } catch (err) {
@@ -160,7 +164,11 @@ export class SearchService {
       logger.error(`Error searching ${platform}: ${error.message}`);
       return { status: 'error', price: null, url: null, error: error.message };
     } finally {
-      if (page) await page.close().catch(() => {});
+      if (page) {
+        const context = page.context();
+        await page.close().catch(() => {});
+        await context.close().catch(() => {});
+      }
     }
   }
 }
