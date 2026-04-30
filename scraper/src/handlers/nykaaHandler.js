@@ -29,18 +29,20 @@ export class NykaaHandler extends BaseScraper {
         return cards.slice(0, 8).map(card => {
 
           // ── TITLE ──────────────────────────────────────────────────
-          // Collect leaf text nodes, skip price-only and pure-number (rating) strings
+          // Collect leaf text nodes, skip price-only, number-only, and discount-label strings
           const leafEls = Array.from(card.querySelectorAll('div, span, p'))
-            .filter(el =>
-              el.children.length === 0 &&
-              el.innerText.trim().length > 3 &&
-              !/^₹/.test(el.innerText.trim()) &&        // skip price-only elements
-              !/^\d+(\.\d+)?$/.test(el.innerText.trim()) // skip pure-number (ratings/counts)
-            );
+            .filter(el => {
+              const text = el.innerText.trim();
+              return el.children.length === 0 &&
+              text.length > 3 &&
+              !/^₹/.test(text) &&        // skip price-only
+              !/^\d+(\.\d+)?$/.test(text) && // skip pure-number
+              !/% Off/i.test(text) &&    // skip discount labels like "13% Off"
+              !/Regular price/i.test(text); // skip "Regular price" labels
+            });
 
-          // First two meaningful text nodes = brand + product name
-          const titleParts = leafEls.slice(0, 2).map(el => el.innerText.trim());
-          const title = titleParts.join(' ').trim();
+          // First meaningful text node after filtering should be the product name
+          const title = leafEls.length > 0 ? leafEls[0].innerText.trim() : card.innerText.split('\n')[0];
 
           // ── PRICE: selling price (NOT the struck-through MRP) ───────
           const allPriceEls = Array.from(card.querySelectorAll('span, div, p'))
@@ -49,40 +51,47 @@ export class NykaaHandler extends BaseScraper {
               /₹\s*[\d,]+/.test(el.innerText)
             );
 
-          // Walk up DOM tree to detect strikethrough formatting
-          const isStrikethrough = (el) => {
-            let cur = el;
-            while (cur && cur !== card) {
-              if (cur.tagName === 'DEL' || cur.tagName === 'S') return true;
-              const cls = (cur.className || '').toLowerCase();
-              if (
-                cls.includes('line-through') ||
-                cls.includes('mrp') ||
-                cls.includes('strike') ||
-                cls.includes('original-price')
-              ) return true;
-              if ((cur.style && cur.style.textDecoration || '').includes('line-through')) return true;
-              cur = cur.parentElement;
-            }
-            return false;
-          };
+          // Find specific "discounted" or "selling" price if labeled
+          const discountedPriceEl = Array.from(card.querySelectorAll('span, div, p'))
+            .find(el => /Discounted price/i.test(el.innerText) || /Selling Price/i.test(el.innerText));
 
-          // First: prefer non-strikethrough price (= selling price)
-          let sellingPriceEl = allPriceEls.find(el => !isStrikethrough(el));
-
-          // Fallback: if all elements look the same, take the LOWEST numeric value
-          // (selling price is always ≤ MRP)
-          if (!sellingPriceEl && allPriceEls.length > 0) {
-            const parsed = allPriceEls.map(el => {
-              const m = el.innerText.match(/₹\s*([\d,]+)/);
-              return m ? { el, val: parseInt(m[1].replace(/,/g, ''), 10) } : null;
-            }).filter(Boolean);
-            if (parsed.length > 0) {
-              sellingPriceEl = parsed.reduce((a, b) => b.val < a.val ? b : a).el;
-            }
+          let priceText = null;
+          if (discountedPriceEl) {
+             const match = discountedPriceEl.innerText.match(/₹\s*([\d,]+)/);
+             if (match) priceText = match[0];
           }
 
-          const priceText = sellingPriceEl ? sellingPriceEl.innerText.trim() : null;
+          if (!priceText) {
+              // Walk up DOM tree to detect strikethrough formatting
+              const isStrikethrough = (el) => {
+                let cur = el;
+                while (cur && cur !== card) {
+                  if (cur.tagName === 'DEL' || cur.tagName === 'S') return true;
+                  const cls = (cur.className || '').toLowerCase();
+                  if (
+                    cls.includes('line-through') ||
+                    cls.includes('mrp') ||
+                    cls.includes('strike') ||
+                    cls.includes('original-price')
+                  ) return true;
+                  cur = cur.parentElement;
+                }
+                return false;
+              };
+
+              let sellingPriceEl = allPriceEls.find(el => !isStrikethrough(el));
+
+              if (!sellingPriceEl && allPriceEls.length > 0) {
+                const parsed = allPriceEls.map(el => {
+                  const m = el.innerText.match(/₹\s*([\d,]+)/);
+                  return m ? { el, val: parseInt(m[1].replace(/,/g, ''), 10) } : null;
+                }).filter(Boolean);
+                if (parsed.length > 0) {
+                  sellingPriceEl = parsed.reduce((a, b) => b.val < a.val ? b : a).el;
+                }
+              }
+              priceText = sellingPriceEl ? sellingPriceEl.innerText.trim() : null;
+          }
           const imgEl = card.querySelector('img');
 
           return {

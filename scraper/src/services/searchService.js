@@ -55,10 +55,11 @@ export class SearchService {
               await this.initBrowser();
               logger.info(`Found "${product.name}" in database. Scraping fresh prices from known URLs.`);
 
-              // Scrape live from known URLs
-              await Promise.all(sources.map(async (source) => {
+              // Scrape live from known URLs SEQUENTIALLY to avoid overloading Render
+              for (const source of sources) {
                  const platform = source.platform.toLowerCase();
                  try {
+                     logger.info(`Refreshing ${platform} price...`);
                      const page = await this.browserService.createPage();
                      let handler;
                      if (platform === 'amazon') handler = new AmazonHandler(page);
@@ -81,10 +82,12 @@ export class SearchService {
                          }
                      }
                      await page.close().catch(() => {});
+                     // Brief pause between sources
+                     await new Promise(r => setTimeout(r, 2000));
                  } catch (err) {
                      logger.error(`Error fresh scraping ${platform}`, err);
                  }
-              }));
+              }
 
               return {
                  product: product.name,
