@@ -9,10 +9,15 @@ export class AmazonHandler extends BaseScraper {
       const searchUrl = `https://www.amazon.in/s?k=${encodeURIComponent(query)}`;
       await this.navigateWithRetry(searchUrl, { waitUntil: 'domcontentloaded' });
 
-      // Wait for search results
-      const resultsLoaded = await this.waitForSelectorSafe('[data-component-type="s-search-result"]', 10000);
+      // Wait for search results with a longer timeout and fallback
+      const resultsLoaded = await this.waitForSelectorSafe('[data-component-type="s-search-result"], .s-result-item', 15000);
       if (!resultsLoaded) {
-        logger.warn(`Amazon: No search results loaded for "${query}".`);
+        const title = await this.page.title();
+        if (title.includes('Robot') || title.includes('CAPTCHA')) {
+          logger.warn(`Amazon: Blocked by bot detection during search for "${query}".`);
+          return { status: 'error', price: null, url: null, error: 'Bot detection' };
+        }
+        logger.warn(`Amazon: No search results loaded for "${query}". Title: "${title}"`);
         return { status: 'error', price: null, url: null, error: 'No results' };
       }
 

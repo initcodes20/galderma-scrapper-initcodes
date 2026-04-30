@@ -2,17 +2,17 @@ export const CONFIG = {
   BROWSER: {
     HEADLESS: true, // Default to true for invisible scraping
     VIEWPORT: { width: 1280, height: 800 },
-    TIMEOUT: 60000,
+    TIMEOUT: 90000, // Increased to 90s for slower environments like Render
   },
   RETRY: {
     MAX_RETRIES: 3,
-    INITIAL_DELAY: 2000,
-    MAX_DELAY: 10000,
+    INITIAL_DELAY: 3000,
+    MAX_DELAY: 15000,
   },
   HUMAN_BEHAVIOR: {
-    MIN_DELAY: 1000,
-    MAX_DELAY: 4000,
-    SCROLL_PROBABILITY: 0.7,
+    MIN_DELAY: 2000,
+    MAX_DELAY: 5000,
+    SCROLL_PROBABILITY: 0.8,
   },
   USER_AGENTS: [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",

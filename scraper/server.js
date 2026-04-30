@@ -14,6 +14,14 @@ app.use(express.json());
 
 const searchService = new SearchService();
 
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', message: 'Galderma Scraper API is running' });
+});
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 app.post('/search-product', async (req, res) => {
   const { query } = req.body;
   

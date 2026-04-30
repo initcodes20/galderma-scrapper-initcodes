@@ -104,18 +104,22 @@ export class SearchService {
     
     logger.info(`Starting live multi-platform search for: ${query}`);
 
-    // Run searches in parallel
-    const [amazonResult, flipkartResult, nykaaResult] = await Promise.allSettled([
-      this.searchPlatform('amazon', query),
-      this.searchPlatform('flipkart', query),
-      this.searchPlatform('nykaa', query)
-    ]);
-
-    const results = {
-      amazon: amazonResult.status === 'fulfilled' ? amazonResult.value : { status: 'error', price: null },
-      flipkart: flipkartResult.status === 'fulfilled' ? flipkartResult.value : { status: 'error', price: null },
-      nykaa: nykaaResult.status === 'fulfilled' ? nykaaResult.value : { status: 'error', price: null }
-    };
+    // Run searches sequentially to avoid overwhelming server resources
+    const platforms = ['amazon', 'flipkart', 'nykaa'];
+    const results = {};
+    
+    for (const platform of platforms) {
+      try {
+        logger.info(`Starting search for ${platform}...`);
+        results[platform] = await this.searchPlatform(platform, query);
+        
+        // Add a small delay between platforms to avoid detection
+        await new Promise(r => setTimeout(r, 2000));
+      } catch (err) {
+        logger.error(`Failed to search ${platform}:`, err);
+        results[platform] = { status: 'error', price: null, error: err.message };
+      }
+    }
 
     // calculate best price
     let bestPrice = Infinity;
